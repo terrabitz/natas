@@ -19,7 +19,8 @@ offset = 10
 
 auth = HTTPBasicAuth(level_username, level_password)
 
-# Utilities #############################################################
+
+# Printing Utilites #############################################################
 def bytes_to_hex_array(bytes):
     return ['{0:0{1}x}'.format(c, 2) for c in bytes]
 
@@ -40,6 +41,8 @@ def print_start(input):
     print("Input: " + input)
     print()
 
+
+# Utilities for checking an encrypted query #####################################
 
 def send_encrypted_query(bytes_arr):
     query = bytes(bytes_arr)
@@ -65,13 +68,7 @@ def has_valid_padding(bytes_arr):
         return True
 
 
-def modify_array(bytes_arr):
-    print("Modifying array...")
-    for idx in range(16):
-        current = bytes_arr[idx]
-        bytes_arr[idx] = (current + random.randint(1, 30)) % 256
-    return bytes_arr
-
+# Utilites for checking an unencrypted query ####################################
 
 def get_encrypted_query_from_plaintext(input):
     res = requests.post(url, auth=auth, data={'query': input})
@@ -80,6 +77,8 @@ def get_encrypted_query_from_plaintext(input):
     query_array = bytearray(decoded_query)
     return query_array
 
+
+# Utilties for getting offset ###################################################
 
 def has_repeating_blocks(bytes_arr, block_size=16):
     logging.debug(bytes_arr)
@@ -111,7 +110,7 @@ def get_offset():
             return offset, repeating_blocks_start_index
         print(text_output)
 
-
+# MAIN ##########################################################################
 if __name__ == "__main__":
     offset, start_index = get_offset()
     size_to_find = block_size * 2
